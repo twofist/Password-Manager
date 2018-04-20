@@ -1,7 +1,7 @@
 # Password-Manager
 Password-Manager in Java
 
-#Features:  
+# Features:  
 Save Website/App names  
 Add Images  
 Save Usernames-Emails-Passwords  

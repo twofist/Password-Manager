@@ -7,6 +7,7 @@ import javafx.scene.paint.Color;
 class Player extends LifeForm {
 
 	private boolean[] keys = {false, false, false, false};
+	private JumpEffect jumpeffect;
 
 	public Player(Canvas canvas) {
 		super(canvas);
@@ -20,6 +21,7 @@ class Player extends LifeForm {
 		this.y = 0;
 		this.canjump = true;
 		this.color = Color.BLUE;
+		this.jumpeffect = new JumpEffect(this.canvas, this.x, this.y);
 		addKeyEvents();
 	}
 	
@@ -82,9 +84,18 @@ class Player extends LifeForm {
 		}
 		
 		if(this.keys[0] && this.canjump && this.getOutOfBoundsBottom()) {
-			this.applyJump(-1);
+			this.playerJump();
 		}
 			
+	}
+	
+	void playerJump() {
+		this.applyJump(-1);
+		this.jumpeffect.resetEffect(this.x, this.y+this.height);
+	}
+	
+	void drawJumpEffect() {
+		this.jumpeffect.drawJumpEffect();
 	}
 	
 	void onOutOfBounds(){
@@ -138,7 +149,7 @@ class Player extends LifeForm {
 			if(this.getCollisionBottom()){
 				this.resetVelocityV();
 				this.y = obj.y-this.height;
-				this.applyJump(-1);
+				this.playerJump();
 			}
 			if(this.getCollisionTop()){
 				this.x = 0;

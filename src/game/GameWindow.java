@@ -33,6 +33,7 @@ public class GameWindow {
 	private List<DestroyEffect> delist;
 	private List<Turbine> turbinelist;
 	private List<Spike> spikelist;
+	private List<Icicle> iciclelist;
 	private Timeline tl;
 	
 	public GameWindow(){
@@ -48,6 +49,7 @@ public class GameWindow {
 		delist = new ArrayList<DestroyEffect>();
 		turbinelist = new ArrayList<Turbine>();
 		spikelist = new ArrayList<Spike>();
+		iciclelist = new ArrayList<Icicle>();
 	}
 	
 	public void startGame(){
@@ -120,6 +122,15 @@ public class GameWindow {
 		rainlist.add(r);
 	}
 	
+	private void createIcicle() {
+		if(this.iciclelist.size() > 3) return;
+		double x = getRandomNumber(this.width, 0);
+		double y = 0;
+		double timer = getRandomNumber(2000, 8000);
+		Icicle ice = new Icicle(canvas, x, y, timer);
+		iciclelist.add(ice);
+	}
+	
 	private void createTurbine() {
 		if(turbinelist.size() > 1) return;
 		double w = 30;
@@ -151,6 +162,7 @@ public class GameWindow {
 		      handlePlayer();
 		      handleEnemies();
 		      handleRain();
+		      handleIcicle();
 		      handleDestroyEffect();
 		      handleTurbine();
 		      handleCollision();
@@ -204,8 +216,24 @@ public class GameWindow {
 		}
 	}
 	
+	private void handleIcicle() {
+		if(this.scorecounter.getScore() > 20)
+			createIcicle();
+		for(int ii = 0; ii < iciclelist.size(); ii++){
+			Icicle ice = iciclelist.get(ii);
+			ice.drawIcicle();
+			ice.moveIcicle();
+			ice.applyMovement();
+			ice.verticalGravity(vgravity);
+			ice.horizontalGravity(hgravity);
+			
+			handleOutOfBounds(ice);
+		}
+	}
+	
 	private void handleRain(){
-		createRain();
+		if(this.scorecounter.getScore() < 20)
+			createRain();
 		for(int ii = 0; ii < rainlist.size(); ii++){
 			RainDrop rain = rainlist.get(ii);
 			rain.drawObjectRect();
@@ -246,6 +274,7 @@ public class GameWindow {
 		player.drawObjectRect();
 	    player.movePlayer();
 	    player.applyMovement();
+	    player.drawJumpEffect();
 	    player.verticalGravity(vgravity);
 	    player.horizontalGravity(hgravity);
 	    
@@ -253,19 +282,98 @@ public class GameWindow {
 	}
 	
 	private void handleCollision(){
-		handleParticleCollision();
+		handleRainCollision();
 		handleEnemyCollision();
 		handleTurbineCollision();
+		handleIcicleCollision();
 	}
 	
+	private void handleIcicleCollision() {
+		ArrayList<Icicle> removeicicle = new ArrayList<>();
+		for(Icicle ice : iciclelist) {
+			iceEnemyCollision(ice, removeicicle);
+			iceSpikeCollision(ice, removeicicle);
+			icePlayerCollision(ice);
+			iceTurbineCollision(ice, removeicicle);
+		}
+		for(Icicle ice : removeicicle) {
+			iciclelist.remove(ice);
+		}
+	}
+	
+	private void iceTurbineCollision(Icicle ice, ArrayList<Icicle> removeicicle) {
+		for(Turbine t : turbinelist) {
+			if(collisions.collisionAABB(t, ice)) {
+				collisions.collisionSide(t, ice);
+				if(collisions.collisionRectTriangle(t, ice)) {
+					removeicicle.add(ice);
+				}
+			}else {
+				ice.resetCollision();
+				t.resetCollision();
+			}
+		}
+	}
+
+	private void iceEnemyCollision(Icicle ice, ArrayList<Icicle> removeicicle) {
+		ArrayList<Enemy> removeenemy = new ArrayList<>();
+		for(Enemy e : enemylist) {
+			if(collisions.collisionAABB(e, ice)) {
+				collisions.collisionSide(e, ice);
+				if(collisions.collisionRectTriangle(e, ice)) {
+					removeenemy.add(e);
+					removeicicle.add(ice);
+				}
+			}else {
+				ice.resetCollision();
+				e.resetCollision();
+			}
+		}
+		for(Enemy e : removeenemy) {
+			enemylist.remove(e);
+		}
+	}
+
+	private void iceSpikeCollision(Icicle ice, ArrayList<Icicle> removeicicle) {
+		ArrayList<Spike> removespike = new ArrayList<>();
+		for(Spike s : spikelist) {
+			if(collisions.collisionAABB(s, ice)) {
+				collisions.collisionSide(s, ice);
+				if(collisions.collisionRectTriangle(s, ice)) {
+					removespike.add(s);
+					removeicicle.add(ice);
+				}
+			}else {
+				ice.resetCollision();
+				s.resetCollision();
+			}
+		}
+		for(Spike s : removespike) {
+			spikelist.remove(s);
+		}
+	}
+	
+	private void icePlayerCollision(Icicle ice) {
+		if(collisions.collisionAABB(player, ice)) {
+			collisions.collisionSide(player, ice);
+			if(collisions.collisionRectTriangle(player, ice)) {
+				tl.pause();
+				restartGame();
+			}
+		}else {
+			ice.resetCollision();
+			player.resetCollision();
+		}
+	}
+
 	private void handleTurbineCollision() {
 		Player player1 = player;
-		for(int ii = 0; ii < turbinelist.size(); ii++) {
-			Turbine turbine = turbinelist.get(ii);
-			if(collisions.collisionAABB(player1, turbine))
-				turbineOnCollision(player1, turbine);
+		for(Turbine t : turbinelist) {
+			if(collisions.collisionAABB(player1, t))
+				turbineOnCollision(player1, t);
 			else {
 				player1.resetCollision();
+				t.resetCollision();
 			}
 		}
 	}
@@ -276,47 +384,49 @@ public class GameWindow {
 		player.handleCollision();
 	}
 
-	private void handleParticleCollision() {
+	private void handleRainCollision() {
+		ArrayList<RainDrop> removerain = new ArrayList<>();
 		Player lf1 = player;
-		for(int ii = 0; ii < rainlist.size(); ii++) {
-			Particle particle = rainlist.get(ii);
-			if(collisions.collisionAABB(lf1, particle))
-				particleOnCollision(lf1, particle);
+		for(RainDrop r : rainlist) {
+			if(collisions.collisionAABB(lf1, r)) {
+				r.setCollision(player);
+				removerain.add(r);
+			}
 		}
-	}
-	
-	private void particleOnCollision(Player player, Particle particle) {
-		particle.setCollision(player);
-		rainlist.remove(particle);
+		for(RainDrop r : removerain) {
+			rainlist.remove(r);
+		}
 	}
 	
 	private void handleEnemyCollision() {
+		ArrayList<Enemy> removeenemy = new ArrayList<>();
 		Player lf1 = player;
-		for(int ii = 0; ii < enemylist.size(); ii++) {
-			Enemy lf2 = enemylist.get(ii);
-			if(collisions.collisionAABB(lf1, lf2))
-				enemyOnCollision(lf1, lf2);
+		for(Enemy e : enemylist) {
+			if(collisions.collisionAABB(lf1, e))
+				enemyOnCollision(lf1, e, removeenemy);
 			else {
 				lf1.resetCollision();
-				lf2.resetCollision();
+				e.resetCollision();
 			}
 		}
-		for(int ii = 0; ii < spikelist.size(); ii++) {
-			Spike lf2 = spikelist.get(ii);
-			if(collisions.collisionAABB(lf1, lf2)) {
-				collisions.collisionSide(lf1, lf2);
-				if(collisions.collisionRectTriangle(lf1, lf2)) {
+		for(Enemy e : removeenemy) {
+			enemylist.remove(e);
+		}
+		for(Spike s : spikelist) {
+			if(collisions.collisionAABB(lf1, s)) {
+				collisions.collisionSide(lf1, s);
+				if(collisions.collisionRectTriangle(lf1, s)) {
 					tl.pause();
 					restartGame();
 				}
 			}else {
 				lf1.resetCollision();
-				lf2.resetCollision();
+				s.resetCollision();
 			}
 		}
 	}
 	
-	private void enemyOnCollision(Player player, Enemy enemy) {
+	private void enemyOnCollision(Player player, Enemy enemy, ArrayList<Enemy> elist) {
 		player.setCollision(enemy);
 		enemy.setCollision(player);
 		collisions.collisionSide(player, enemy);
@@ -328,10 +438,10 @@ public class GameWindow {
 			scorecounter.changeScore(2);
 			enemy.setBeenHit(true);
 			createDestroyEffect(enemy);
-			enemylist.remove(enemy);
+			elist.add(enemy);
 		}else if(enemy.hasBeenHit() && enemy.getCollisionTop()) {
 			createDestroyEffect(enemy);
-			enemylist.remove(enemy);
+			elist.add(enemy);
 		}
 	}
 	
@@ -352,6 +462,8 @@ public class GameWindow {
 			bounds.outOfBoundsSide(obj);
 			if(obj instanceof RainDrop)
 				((RainDrop) obj).onOutOfBounds(rainlist);
+			else if(obj instanceof Icicle)
+				((Icicle) obj).onOutOfBounds(iciclelist);
 			else if(obj instanceof DestroyEffect)
 				((DestroyEffect) obj).onOutOfBounds(delist);
 			else if(obj instanceof Spike)

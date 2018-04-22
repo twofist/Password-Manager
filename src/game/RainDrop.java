@@ -23,10 +23,6 @@ class RainDrop extends Particle{
 		this.velocity[1] += 0;
 	}
 
-	void onOutOfBoundsRain(List<RainDrop> rainlist) {
-		
-	}
-
 	void onOutOfBounds(List<RainDrop> rainlist) {
 		if(this.getOutOfBoundsBottom()){
 			rainlist.remove(this);

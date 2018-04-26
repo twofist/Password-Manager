@@ -8,18 +8,20 @@ class Player extends LifeForm {
 
 	private boolean[] keys = {false, false, false, false};
 	private JumpEffect jumpeffect;
+	private boolean wind;
 
 	public Player(Canvas canvas) {
 		super(canvas);
 		this.speed = 1.5;
 		this.vgravity = true;
-		this.hgravity = true;
+		this.hgravity = false;
 		this.width = 50;
 		this.height = 50;
 		this.jumpheight = 12;
 		this.x = 0;
 		this.y = 0;
 		this.canjump = true;
+		this.wind = false;
 		this.color = Color.BLUE;
 		this.jumpeffect = new JumpEffect(this.canvas, this.x, this.y);
 		addKeyEvents();
@@ -76,6 +78,8 @@ class Player extends LifeForm {
 		int right = (this.keys[3]) ? 1 : 0;
 		int left = (this.keys[2]) ? 1 : 0;
 		
+		this.hgravity = this.wind;
+		
 		if(this.velocity[0] <= this.speed){
 			double check = (right - left) * this.speed;
 			
@@ -90,6 +94,9 @@ class Player extends LifeForm {
 	}
 	
 	void playerJump() {
+		int right = (this.keys[3]) ? 1 : 0;
+		int left = (this.keys[2]) ? 1 : 0;
+		this.jumpeffect.setDirection(right-left <= 0);
 		this.applyJump(-1);
 		this.jumpeffect.resetEffect(this.x, this.y+this.height);
 	}
@@ -173,6 +180,10 @@ class Player extends LifeForm {
 	private void setOnTop() {
 		this.y = 0;
 //		this.resetVelocityV();
+	}
+	
+	void setWind(boolean b){
+		this.wind = b;
 	}
 
 }

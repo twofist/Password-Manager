@@ -69,14 +69,15 @@ class JumpEffect extends Particle{
 	void drawJumpEffect(){
 		GraphicsContext gc = this.canvas.getGraphicsContext2D();
 		
+		gc.save();
+		gc.setGlobalAlpha(this.alpha-=0.05);
 		for(int ii = 0; ii < this.lineamount; ii++) {
 			drawPath(gc, ii);
 		}
+		gc.restore();
 	}
 	
 	void drawPath(GraphicsContext gc, int ii) {
-		gc.beginPath();
-//		gc.setGlobalAlpha(this.alpha-=0.01);
 		gc.setStroke(this.color);
 		int dir = (this.direction) ? this.angle : -this.angle;
 		
@@ -99,13 +100,16 @@ class JumpEffect extends Particle{
 		}
 		
 		gc.strokeLine(startx, starty, endx, endy);
-		gc.closePath();
 	}
 	
 	private double getRandomNumber(double min, double max){
 		Random rn = new Random();
 		double num = (min + (max - min) * rn.nextDouble());
 		return num;
+	}
+
+	void setDirection(boolean b) {
+		this.direction = b;
 	}
 
 }

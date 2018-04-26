@@ -11,7 +11,7 @@ class Wind extends Particle{
 	private double minheight;
 	private double maxwidth;
 
-	Wind(Canvas canvas, double w, double y, double maxheight, double minheight, double maxwidth) {
+	Wind(Canvas canvas, double w, double x, double y, double maxheight, double minheight, double maxwidth) {
 		super(canvas);
 		this.speed = 2;
 		this.color = Color.LIGHTGREEN;
@@ -19,7 +19,7 @@ class Wind extends Particle{
 		this.height = 0.5;
 		this.vgravity = false;
 		this.hgravity = true;
-		this.x = this.canvas.getWidth();
+		this.x = x;
 		this.y = y;
 		this.maxheight = maxheight;
 		this.minheight = minheight;

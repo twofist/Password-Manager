@@ -1,8 +1,6 @@
 package game;
 
 import java.util.ArrayList;
-import java.util.List;
-
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -12,8 +10,10 @@ class Turbine extends WorldObject{
 	private double x2;
 	private double y2;
 	private double difference;
-	private List<Wind> windlist;
+	private ArrayList<Wind> windlist;
 	private double intakespeed;
+	private double reach;
+	private TurbineWindBox windbox;
 	
 	Turbine(Canvas canvas, double x, double y, double w, double h, double difference) {
 		super(canvas);
@@ -26,7 +26,13 @@ class Turbine extends WorldObject{
 		this.x2 = x+w;
 		this.y2 = y+h;
 		this.difference = difference;
+		this.reach = this.canvas.getWidth();
 		this.windlist = new ArrayList<Wind>();
+		this.windbox = new TurbineWindBox(canvas, this.x,this.y,this.reach,this.height);
+	}
+	
+	TurbineWindBox getWindBox(){
+		return this.windbox;
 	}
 	
 	void drawTurbine() {
@@ -56,7 +62,7 @@ class Turbine extends WorldObject{
 			distance = this.height - previouswind.x;
 		}
 		if(previouswind == null || distance > 10) {
-			Wind wind = new Wind(this.canvas, this.width, this.y, this.y+(this.height/2), this.y, 30);
+			Wind wind = new Wind(this.canvas, this.width, this.reach, this.y, this.y+(this.height/2), this.y, 30);
 			this.windlist.add(wind);
 		}
 	}

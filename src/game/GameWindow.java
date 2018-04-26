@@ -123,7 +123,7 @@ public class GameWindow {
 	}
 	
 	private void createIcicle() {
-		if(this.iciclelist.size() > 3) return;
+		if(this.iciclelist.size() > this.scorecounter.getScore()/40) return;
 		double x = getRandomNumber(this.width, 0);
 		double y = 0;
 		double timer = getRandomNumber(2000, 8000);
@@ -217,7 +217,7 @@ public class GameWindow {
 	}
 	
 	private void handleIcicle() {
-		if(this.scorecounter.getScore() > 20)
+		if(this.scorecounter.getScore() >= 20)
 			createIcicle();
 		for(int ii = 0; ii < iciclelist.size(); ii++){
 			Icicle ice = iciclelist.get(ii);
@@ -375,9 +375,14 @@ public class GameWindow {
 				player1.resetCollision();
 				t.resetCollision();
 			}
+			if(collisions.collisionAABB(player1, t.getWindBox()))
+				player1.setWind(true);
+			else{
+				player1.setWind(false);
+			}
 		}
 	}
-	
+
 	private void turbineOnCollision(Player player, Turbine turbine) {
 		player.setCollision(turbine);
 		collisions.collisionSide(player, turbine);
